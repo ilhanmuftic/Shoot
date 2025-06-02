@@ -1,30 +1,32 @@
-const int shootPin = 9;  // Example pin to trigger turret shooting (e.g., a relay or servo)
+#include <Servo.h>
 
-void setup() {
-  pinMode(shootPin, OUTPUT);
+Servo shooter;
+const int shooterPin = 9;   // Connect your servo signal wire to pin 9
+const int shootAngle = 100; // Angle to "shoot"
+const int restAngle = 0;    // Default resting angle
+const int shootDelay = 500; // Time to hold shoot position in ms
+
+void setup()
+{
   Serial.begin(9600);
-  digitalWrite(shootPin, LOW);
-  Serial.println("Arduino ready, waiting for command...");
+  shooter.attach(shooterPin);
+  shooter.write(restAngle);
 }
 
-void loop() {
-  if (Serial.available()) {
-    char cmd = Serial.read();
-    Serial.print("Received command: ");
-    Serial.println(cmd);
+void loop()
+{
+  if (Serial.available() > 0)
+  {
+    char command = Serial.read();
 
-    if (cmd == 'S') {
-      Serial.println("Shooting!");
-      shoot();
-      Serial.println("Done shooting.");
-    } else {
-      Serial.println("Unknown command.");
+    if (command == 'S')
+    {
+      Serial.println("Shoot command received");
+
+      // Perform shoot action
+      shooter.write(shootAngle);
+      delay(shootDelay);
+      shooter.write(restAngle);
     }
   }
-}
-
-void shoot() {
-  digitalWrite(shootPin, HIGH);  // Activate shoot pin
-  delay(500);                    // Shoot duration (adjust as needed)
-  digitalWrite(shootPin, LOW);
 }
