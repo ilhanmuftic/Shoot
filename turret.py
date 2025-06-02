@@ -56,16 +56,16 @@ def main():
 
             if is_friend:
                 friend_detected = True
-                cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)
-                cv2.putText(frame, "Friend", (left, top - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+                cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
+                cv2.putText(frame, "Target", (left, top - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 255), 2)
 
                 face_center_x = (left + right) // 2
                 face_center_y = (top + bottom) // 2
                 print(f"Friend detected at ({face_center_x}, {face_center_y})")
 
             else:
-                cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
-                cv2.putText(frame, "Unknown", (left, top - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 255), 2)
+                cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)
+                cv2.putText(frame, "Civilian", (left, top - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
 
         current_time = time.time()
         if friend_detected and (current_time - last_shot_time) > cooldown_seconds:
