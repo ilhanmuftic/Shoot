@@ -28,7 +28,7 @@ def main():
         return
     friend_face_encoding = friend_face_encodings[0]
 
-    video_capture = cv2.VideoCapture(0)
+    video_capture = cv2.VideoCapture(2)
     if not video_capture.isOpened():
         print("Error: Could not open webcam")
         return

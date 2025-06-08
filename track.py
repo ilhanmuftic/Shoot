@@ -6,8 +6,9 @@ import serial
 
 # === CONFIGURATION ===
 SERIAL_PORT = '/dev/ttyUSB0'
-FRAME_WIDTH = 640  # Can be set manually or fetched from capture
+FRAME_WIDTH = 1280  # Can be set manually or fetched from capture
 COOLDOWN_SECONDS = 3
+
 
 # === SETUP SERIAL ===
 try:
@@ -27,7 +28,6 @@ def shoot():
 
 # === ROTATE FUNCTION ===
 def send_rotation(angle):
-    angle = max(0, min(180, angle))  # constrain to 0–180
     command = f"R{angle}\n"
     if ser and ser.is_open:
         ser.write(command.encode())
@@ -46,7 +46,7 @@ def main():
     friend_face_encoding = friend_face_encodings[0]
 
     # Setup video
-    video_capture = cv2.VideoCapture(0)
+    video_capture = cv2.VideoCapture(2)
     if not video_capture.isOpened():
         print("Error: Could not open webcam")
         return
@@ -57,6 +57,7 @@ def main():
     print("Starting video stream. Press 'q' to quit.")
 
     last_shot_time = 0
+    current_angle = 90  # start at center
 
     while True:
         ret, frame = video_capture.read()
@@ -64,6 +65,7 @@ def main():
             print("Failed to grab frame")
             break
 
+        # frame = cv2.flip(frame, 1)  # ← add this line to flip horizontally
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         face_locations = face_recognition.face_locations(rgb_frame)
         face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
@@ -82,15 +84,26 @@ def main():
                 cv2.putText(frame, "Target", (left, top - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 255), 2)
 
                 # === ROTATE LOGIC ===
-                offset_x = face_center_x - frame_center_x
+             # Calculate offset
+                offset_x = frame_center_x - face_center_x  # reverse if flipped
                 normalized = offset_x / (frame_width // 2)  # -1 to 1
-                angle = int(90 + normalized * 45)  # Map to 45–135 range
-                send_rotation(angle)
+                normalized = max(-1, min(1, normalized))    # safety clamp
 
-                print(f"Friend at X={face_center_x}, angle={angle}")
+                # Define how much to rotate per frame
+                max_step = 3  # degrees per frame
+                delta = int(normalized * max_step)
+
+                # Update current angle gradually
+                current_angle += delta
+                current_angle = max(0, min(180, current_angle))  # constrain full servo range
+
+                send_rotation(current_angle)
+                print(f"Friend at X={face_center_x}, angle={current_angle}")
+
+            
 
                 current_time = time.time()
-                if abs(offset_x) < 30 and (current_time - last_shot_time) > COOLDOWN_SECONDS:
+                if abs(offset_x) < 20 and (current_time - last_shot_time) > COOLDOWN_SECONDS:
                     shoot()
                     last_shot_time = current_time
 
